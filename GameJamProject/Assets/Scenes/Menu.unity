@@ -1232,15 +1232,15 @@ MonoBehaviour:
   skins:
   - skinName: Nissan (default) - 0
     price: 0
-    carSprite: {fileID: 21300000, guid: a24925bc8ba4fb947a2bf8fb12699dca, type: 3}
+    carSprite: {fileID: 21300000, guid: a89159f7e10195c4eb1a09629e95299a, type: 3}
     previewModel: {fileID: 0}
   - skinName: McLaren
-    price: 100
-    carSprite: {fileID: 0}
+    price: 3
+    carSprite: {fileID: 21300000, guid: aedf26e6f9bd90a408ea696fd7559449, type: 3}
     previewModel: {fileID: 0}
-  - skinName: 0
-    price: 0
-    carSprite: {fileID: 0}
+  - skinName: mercedes
+    price: 5
+    carSprite: {fileID: 21300000, guid: 75711041600f03b47bcbdc4d96ec93a7, type: 3}
     previewModel: {fileID: 0}
   nextButton: {fileID: 1481478022}
   prevButton: {fileID: 881002788}
@@ -1547,7 +1547,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 174dc05502c6f9847b9a0c7a68c55ad1, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1091750c1824c184b8f4b0df437a4f42, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
