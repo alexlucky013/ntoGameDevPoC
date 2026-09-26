@@ -1230,7 +1230,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CarShop
   carDisplayImage: {fileID: 1985970462}
   skins:
-  - skinName: Nissan (default) - 0
+  - skinName: Nissan
     price: 0
     carSprite: {fileID: 21300000, guid: a89159f7e10195c4eb1a09629e95299a, type: 3}
     previewModel: {fileID: 0}
