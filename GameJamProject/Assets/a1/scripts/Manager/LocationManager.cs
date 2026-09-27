@@ -19,6 +19,9 @@ public class LocationManager : MonoBehaviour
         [Tooltip("Скайбокс (небо) для этой темы")]
         public Material skyboxMaterial;
 
+        [Tooltip("Цвет тумана для этой темы")]
+        public Color fogColor = Color.gray; // <-- С маленькой буквы!
+
         [Header("2. Препятствия под эту локацию")]
         public WorldManager.ObstacleConfig[] staticObstacles;
         public WorldManager.ObstacleConfig[] carObstacles;
@@ -33,7 +36,7 @@ public class LocationManager : MonoBehaviour
     [Header("Ссылки на куски дороги на сцене")]
     public Renderer[] roadRenderers;
 
-    private GameObject currentSpawnedEnvironment; // Экземпляр заспавненного префаба на сцене
+    private GameObject currentSpawnedEnvironment;
 
     private void Awake()
     {
@@ -43,7 +46,6 @@ public class LocationManager : MonoBehaviour
 
     private void Start()
     {
-        // Запускаем именно в Start(), чтобы WorldManager.Instance гарантированно уже существовал!
         int selectedIndex = PlayerPrefs.GetInt("SelectedLocation", 0);
         ApplyLocation(selectedIndex);
     }
@@ -56,8 +58,7 @@ public class LocationManager : MonoBehaviour
 
         LocationData activeLoc = locations[index];
 
-        // 1. УПРАВЛЕНИЕ ОКРУЖЕНИЕМ (ПРЕФАБ ИЛИ ОБЪЕКТ СО СЦЕНЫ)
-        // Удаляем ранее заспавненный префаб предыдущей темы (если был)
+        // 1. Окружение (удаляем старый префаб, спавним новый)
         if (currentSpawnedEnvironment != null)
         {
             Destroy(currentSpawnedEnvironment);
@@ -70,27 +71,23 @@ public class LocationManager : MonoBehaviour
 
             if (env != null)
             {
-                // Проверяем: это объект уже на сцене или это префаб из папки Project?
-                if (env.scene.rootCount != 0) 
+                if (env.scene.rootCount != 0)
                 {
-                    // Объект лежит на сцене: просто включаем/выключаем
                     env.SetActive(isCurrent);
                 }
                 else if (isCurrent)
                 {
-                    // Это префаб из папки: спавним его на сцену в координаты (0, 0, 0)!
                     currentSpawnedEnvironment = Instantiate(env, Vector3.zero, Quaternion.identity);
                 }
             }
 
-            // Машинка игрока под тему (если есть)
             if (locations[i].playerCarModel != null)
             {
                 locations[i].playerCarModel.SetActive(isCurrent);
             }
         }
 
-        // 2. МАТЕРИАЛ ДОРОГИ
+        // 2. Материал дороги
         if (activeLoc.roadMaterial != null && roadRenderers != null)
         {
             foreach (var rend in roadRenderers)
@@ -99,22 +96,25 @@ public class LocationManager : MonoBehaviour
             }
         }
 
-        // 3. НЕБО (SKYBOX)
+        // 3. Небо (Skybox)
         if (activeLoc.skyboxMaterial != null)
         {
             RenderSettings.skybox = activeLoc.skyboxMaterial;
         }
 
-        // 4. ПЕРЕДАЕМ ПРЕПЯТСТВИЯ И МАШИНЫ В WORLD MANAGER
+        // 4. ТУМАН (ВНИМАНИЕ: fogColor, fogStartDistance, fogEndDistance — ВСЁ с маленькой буквы!)
+        RenderSettings.fog = true;
+        RenderSettings.fogMode = FogMode.Linear;
+        RenderSettings.fogStartDistance = 15f;
+        RenderSettings.fogEndDistance = 45f;
+        RenderSettings.fogColor = activeLoc.fogColor;
+
+        // 5. Передаем препятствия в спавнер
         if (WorldManager.Instance != null)
         {
             WorldManager.Instance.SetLocationObstacles(activeLoc.staticObstacles, activeLoc.carObstacles);
         }
-        else
-        {
-            Debug.LogWarning("[LocationManager] WorldManager.Instance еще не готов или отсутствует на сцене!");
-        }
 
-        Debug.Log($"<color=cyan>[LOCATION]</color> Успешно загружена локация: <b>{activeLoc.locationName}</b>");
+        Debug.Log($"<color=cyan>[LOCATION]</color> Активирована локация: <b>{activeLoc.locationName}</b>");
     }
 }

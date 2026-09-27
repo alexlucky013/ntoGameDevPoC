@@ -9,14 +9,28 @@ public class ScoreManager : MonoBehaviour
     [Tooltip("Сколько метров нужно проехать для получения 1 монеты")]
     public float metersPerCoin = 100f;
 
-    [Header("Единый текст статистики (висит всегда)")]
-    [Tooltip("Перетащите сюда ваш текстовый объект со скриншота")]
-    public TextMeshProUGUI statsDisplayTMP;
+    [Header("3 отдельных текста статистики на экране")]
+    [Tooltip("1. Текстовый объект для отображения дистанции")]
+    public TextMeshProUGUI distanceText;
 
-    [Header("Кастомизация текста в Инспекторе")]
-    [TextArea(5, 8)]
-    [Tooltip("Метки для автоподстановки:\n{distance} — текущая дистанция\n{coins} — ОБЩИЙ банк всех монет\n{record} — лучший рекорд")]
-    public string statsTemplate = "Дистанция:\n<b>{distance} м</b>\nОбщие монеты: <b>{coins}</b>\nРекорд:\n<b>{record} м</b>";
+    [Tooltip("2. Текстовый объект для отображения монет")]
+    public TextMeshProUGUI coinsText;
+
+    [Tooltip("3. Текстовый объект для отображения рекорда")]
+    public TextMeshProUGUI recordText;
+
+    [Header("Кастомизация шаблонов в Инспекторе")]
+    [TextArea(2, 3)]
+    [Tooltip("Метка {distance} заменится на метры текущего заезда")]
+    public string distanceTemplate = "Дистанция:\n<b>{distance} м</b>";
+
+    [TextArea(2, 3)]
+    [Tooltip("Метка {coins} — общий банк монет. Метка {runCoins} — монеты только за этот заезд")]
+    public string coinsTemplate = "Монеты:\n<b>{coins}</b>";
+
+    [TextArea(2, 3)]
+    [Tooltip("Метка {record} заменится на лучший рекорд дистанции")]
+    public string recordTemplate = "Рекорд:\n<b>{record} м</b>";
 
     [Header("Текущий заезд (Read-Only)")]
     public float currentDistance = 0f;
@@ -31,7 +45,7 @@ public class ScoreManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
-        // Считываем сохраненный банк и рекорд из памяти
+        // Считываем сохраненный банк монет и рекорд из памяти
         savedBankCoins = PlayerPrefs.GetInt("TotalCoins", 0);
         savedBestDistance = PlayerPrefs.GetFloat("BestDistance", 0f);
     }
@@ -47,7 +61,7 @@ public class ScoreManager : MonoBehaviour
 
     private void Update()
     {
-        // Пока машина едет — начисляем метры и монеты
+        // Пока машина едет — начисляем метры и считаем монеты
         if (WorldManager.Instance != null && WorldManager.Instance.isWorldActive && Time.timeScale > 0f)
         {
             if (PlayerController.Instance == null || !PlayerController.Instance.IsDead)
@@ -57,29 +71,41 @@ public class ScoreManager : MonoBehaviour
             }
         }
 
-        // Текст на экране обновляется ВСЕГДА в реальном времени
+        // Обновляем все 3 текста на экране в реальном времени
         UpdateDisplay();
     }
 
     public void UpdateDisplay()
     {
-        if (statsDisplayTMP == null) return;
-
         int distInt = Mathf.FloorToInt(currentDistance);
-        
-        // Общие монеты = несгораемый банк + то, что заработано прямо сейчас
+
+        // Общие монеты = банк из памяти + то, что заработано прямо сейчас в заезде
         int totalCoins = savedBankCoins + currentCoins;
 
         // Рекорд = максимум между старым рекордом и текущей дистанцией
         int bestDist = Mathf.FloorToInt(Mathf.Max(savedBestDistance, currentDistance));
 
-        // Подставляем цифры в ваш шаблон текста из инспектора
-        string formattedText = statsTemplate
-            .Replace("{distance}", distInt.ToString())
-            .Replace("{coins}", totalCoins.ToString())
-            .Replace("{record}", bestDist.ToString());
+        // 1. Обновляем текст дистанции
+        if (distanceText != null)
+        {
+            distanceText.text = distanceTemplate.Replace("{distance}", distInt.ToString());
+        }
 
-        statsDisplayTMP.text = formattedText;
+        // 2. Обновляем текст монет (поддерживает и общий банк {coins}, и монеты за заезд {runCoins})
+        if (coinsText != null)
+        {
+            coinsText.text = coinsTemplate
+                .Replace("{coins}", totalCoins.ToString())
+                .Replace("{runCoins}", currentCoins.ToString());
+        }
+
+        // 3. Обновляем текст рекорда
+        if (recordText != null)
+        {
+            recordText.text = recordTemplate
+                .Replace("{record}", bestDist.ToString())
+                .Replace("{distance}", bestDist.ToString());
+        }
     }
 
     public void SaveResults()
@@ -87,9 +113,14 @@ public class ScoreManager : MonoBehaviour
         if (isSaved) return;
         isSaved = true;
 
+        // Сохраняем дистанцию этого заезда (для меню)
+        PlayerPrefs.SetFloat("LastDistance", currentDistance);
+
+        // Пополняем общий несгораемый банк монет
         int totalCoins = savedBankCoins + currentCoins;
         PlayerPrefs.SetInt("TotalCoins", totalCoins);
 
+        // Обновляем рекорд
         if (currentDistance > savedBestDistance)
         {
             PlayerPrefs.SetFloat("BestDistance", currentDistance);
